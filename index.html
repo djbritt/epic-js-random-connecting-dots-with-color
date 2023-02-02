@@ -1,0 +1,155 @@
+<body>
+  <canvas id="canvas"></canvas>
+
+</body>
+
+<script>
+
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+  const dots = [];
+  let lines = [];
+  const triangles = [];
+
+  // Colors array
+  const colors = ['red', 'blue', 'green', 'yellow', 'pink', 'orange'];
+
+  // Function to calculate the distance between two dots
+  const calculateDistance = (dot1, dot2) => {
+    const xDistance = dot1.x - dot2.x;
+    const yDistance = dot1.y - dot2.y;
+    return Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+  };
+
+  // Function to update the position of the dots and check for connections
+  const update = () => {
+    lines = [];
+    for (let i = 0; i < dots.length; i++) {
+      const dot1 = dots[i];
+      for (let j = i + 1; j < dots.length; j++) {
+        const dot2 = dots[j];
+        const distance = calculateDistance(dot1, dot2);
+        if (distance < 100) {
+          lines.push([dot1, dot2]);
+        }
+      }
+      dot1.x += dot1.dx;
+      dot1.y += dot1.dy;
+      if (dot1.x > window.innerWidth || dot1.x < 0) {
+        dot1.dx = -dot1.dx;
+      }
+      if (dot1.y > window.innerHeight || dot1.y < 0) {
+        dot1.dy = -dot1.dy;
+      }
+    }
+
+    // Check for triangles
+    for (let i = 0; i < lines.length; i++) {
+      const dot1 = lines[i][0];
+      const dot2 = lines[i][1];
+      for (let j = i + 1; j < lines.length; j++) {
+        const dot3 = lines[j][0];
+        const dot4 = lines[j][1];
+        if (dot2 === dot3) {
+          // Check if triangle has already been created
+          let triangleExists = false;
+          for (const triangle of triangles) {
+            if (triangle.includes(dot1) && triangle.includes(dot2) && triangle.includes(dot4)) {
+              triangleExists = true;
+              break;
+            }
+          }
+          if (!triangleExists) {
+            // Add new triangle
+            triangles.push([dot1, dot2, dot4]);
+          }
+        }
+      }
+    }
+  };
+
+  const render = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const line of lines) {
+      ctx.beginPath();
+      ctx.moveTo(line[0].x, line[0].y);
+      ctx.lineTo(line[1].x, line[1].y);
+      ctx.stroke();
+    }
+
+    // Loop through lines and check for triangles
+    for (let i = 0; i < lines.length; i++) {
+      const dot1 = lines[i][0];
+      const dot2 = lines[i][1];
+      for (let j = i + 1; j < lines.length; j++) {
+        const dot3 = lines[j][0];
+        const dot4 = lines[j][1];
+        if (dot2 === dot3) {
+          ctx.beginPath();
+          ctx.moveTo(dot1.x, dot1.y);
+          ctx.lineTo(dot2.x, dot2.y);
+          ctx.lineTo(dot4.x, dot4.y);
+          ctx.closePath();
+          // Fill the triangle with a random color and keep it the same for its life
+          ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+          ctx.fill();
+        }
+      }
+    }
+    for (let i = 0; i < lines.length; i++) {
+      const dot1 = lines[i][0];
+      const dot2 = lines[i][1];
+      for (let j = i + 1; j < lines.length; j++) {
+        const dot3 = lines[j][0];
+        const dot4 = lines[j][1];
+        if (dot2 === dot3) {
+          // Check if the triangle has already been assigned a color
+          if (!dot1.triangleColor) {
+            dot1.triangleColor = colors[Math.floor(Math.random() * colors.length)];
+          }
+          ctx.beginPath();
+          ctx.moveTo(dot1.x, dot1.y);
+          ctx.lineTo(dot2.x, dot2.y);
+          ctx.lineTo(dot4.x, dot4.y);
+          ctx.closePath();
+          ctx.fillStyle = dot1.triangleColor;
+          ctx.fill();
+        }
+      }
+    }
+
+    for (const dot of dots) {
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "black";
+      ctx.fill();
+    }
+  };
+  // Function to animate the dots
+  const animate = () => {
+    update();
+    render();
+    requestAnimationFrame(animate);
+  };
+
+  // Add event listener to create dots on click
+  // canvas.addEventListener("click", e => {
+  for (let i = 0; i < 100; i++) {
+    const dot = {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      dx: (Math.random() - 0.5) * 1,
+      dy: (Math.random() - 0.5) * 1
+    };
+    dots.push(dot);
+  }
+  // });
+
+  animate();
+
+</script>
